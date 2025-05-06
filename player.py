@@ -16,6 +16,7 @@ class Player:
         self.elo = ELO_START #Points elo du joueur (WIP)
         self.elo_position = None
         self.winrate_position = None
+        self.points_position = None
 
         self.partners_history = set()  #Partenaires avec lesquels on a déjà joué.
 

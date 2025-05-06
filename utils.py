@@ -6,6 +6,8 @@ from tournament import Tournament
 import re
 import unicodedata
 
+TYPE_DICO_FR = {"mixte" : "mixte", "random" : "aléatoire", "double_F" : "double Femme", "double_H" : "double Homme"}
+
 def save_tournament(name : str, tournament : Tournament):
     logging.info(f"Saving tournament with name: {name}")
     try :

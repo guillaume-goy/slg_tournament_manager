@@ -4,7 +4,7 @@ from tkinter import simpledialog, messagebox, filedialog
 from player import Player
 from match import Match, Score
 from tournament import Tournament
-from utils import save_tournament, load_tournament, clean_str, change_log_file
+from utils import save_tournament, load_tournament, clean_str, change_log_file, TYPE_DICO_FR
 import random
 from itertools import combinations
 import logging
@@ -40,7 +40,8 @@ def loading_tournament():
         tournament = load_tournament(dir_name)
         messagebox.showinfo("Succès", "La tournoi a été chargé avec succès.")
     except :
-        messagebox.showerror("Erreur", "Le tournoi n'a pas pu être chargé\nLe dossier est il bien un dossier compatible ? Est il vide ?")
+        messagebox.showerror("Erreur", "Le tournoi n'a pas pu être chargé\nLe dossier est il bien un dossier compatible ? Est il vide ?\nLe nom est il valide ?")
+        return
     change_log_file(dir_name + "/log_file.log")
     logging.info("Loading tournament into gui.py")
     logging.info(f"{tournament}")
@@ -79,7 +80,7 @@ def adding_player(event=None):
                 messagebox.showwarning("Erreur", "ce nom est déjà utilisé, veuillez recommencer en choississant un nom différent.")
         if not gender:
             logging.warning("No gender selection")
-            messagebox.showwarning("Erreur", "Vous devez sekectionner un genre.")
+            messagebox.showwarning("Erreur", "Vous devez selectionner un genre.")
             return
         
         player = Player(name, gender)
@@ -114,18 +115,30 @@ def saving_tounament(event=None):
         logging.info(f"gui.py : SAVING tournament\n{tournament}")
     except :
         logging.warning("No tournament to save")
-        messagebox.showerror("Erreur de saubegarde", "Il n'y a rien à sauvegarder pour le moment.")
+        messagebox.showerror("Erreur de sauvegarde", "Il n'y a rien à sauvegarder pour le moment.")
 
 def creating_new_match(type):
     if type not in ["random", "double_H", "double_F", "mixte"]:
         messagebox.showerror("Erreur", "Le type de match selectionné n'est pas conforme")
     check = tournament.create_random_match(cat=type)
     if check == 0:
-        messagebox.showerror("Erreur", f"Nous n'avons pas pu créer de match {type}\nVeuillez vérifier que les conditions sont respectées et reessayer.")
+        messagebox.showerror("Erreur", f"Nous n'avons pas pu créer de match {TYPE_DICO_FR[type]}\nVeuillez vérifier que les conditions sont respectées et reessayer.")
         return
     else :
         update_all()
-        messagebox.showinfo("Match créé", f"Match créé avec succès :\n{tournament.ongoing_matches[-1]}")
+        match = tournament.ongoing_matches[-1]
+        messagebox.showinfo("Match créé", f"!! Match créé avec succès !!\n{match.player1.name} et {match.player2.name} contre {match.player3.name} et {match.player4.name}")
+
+def infos():
+    nb_total_points = 0
+    for player in tournament.players_global:
+        nb_total_points += player.points_won
+    messagebox.showinfo("Informations sur le tournoi",
+        f"------- Tounoi {tournament.name} --------------\n" +
+        f"Nombre de participants : {len(tournament.players_global)}\n" +
+        f"Nombre de matchs joués : {tournament.number_of_match}\n" +
+        f"Nombre de points totals gagnés : {nb_total_points//2}\n"
+    )
 
 #Bindings
 fenetre.bind('<Control-s>', saving_tounament)
@@ -143,8 +156,8 @@ menu1.add_command(label="Quitter", command=confirm_and_quit)
 menubar.add_cascade(label="Fichier", menu=menu1)
 
 menu2 = tk.Menu(menubar, tearoff=0)
-menu2.add_command(label="Ajouter un joueur", command=adding_player)
-menubar.add_cascade(label="Joueurs", menu=menu2)
+menu2.add_command(label="Ajouter un.e joueur.euse", command=adding_player)
+menubar.add_cascade(label="Joueur.euses", menu=menu2)
 
 menu3 = tk.Menu(menubar, tearoff=0)
 menu3.add_command(label="Commencer un nouveau match aléatoire", command=lambda: creating_new_match("random"))
@@ -152,10 +165,12 @@ menu3.add_command(label="Commencer un nouveau match mixte", command=lambda: crea
 menu3.add_command(label="Commencer un nouveau match double Femmes", command=lambda: creating_new_match("double_F"))
 menu3.add_command(label="Commencer un nouveau match double Hommes", command=lambda: creating_new_match("double_H"))
 menu3.add_separator()
-menu3.add_command(label="Créer un match prédéfini", command=lambda: creating_premade_match())
-menubar.add_cascade(label="Matches", menu=menu3)
+menu3.add_command(label="Choisir une composition", command=lambda: creating_premade_match())
+menubar.add_cascade(label="Matchs", menu=menu3)
 
 menu4 = tk.Menu(menubar, tearoff=0)
+menu4.add_command(label="Informations sur le tournoi", command=infos)
+menu3.add_separator()
 menu4.add_command(label="A propos", command=apropos)
 menubar.add_cascade(label="Aide", menu=menu4)
 
@@ -177,24 +192,31 @@ def treeview_sort_column(tv, col, reverse):
 frame_list_of_players = tk.Frame(fenetre)
 frame_list_of_players.grid(row=0, column=0, padx=10, pady=10, sticky="n")
 
-title = tk.Label(frame_list_of_players, text="Liste des joueurs du tournoi", font=("Helvetica", 12, "bold"))
+title = tk.Label(frame_list_of_players, text="Liste des joueuses et joueurs du tournoi", font=("Helvetica", 12, "bold"))
 title.grid(row=0, column=0, sticky="w", pady=(0, 5))
 
-tree = ttk.Treeview(frame_list_of_players, columns=("Nom", "Genre", "Statut", "C1", "winrate", "C2", "elo"), show="headings", height=20)
+tree = ttk.Treeview(frame_list_of_players, columns=("Nom", "Genre", "Statut", "Matchs", "C1", "winrate", "C2", "elo", "C3", "points"), show="headings", height=20)
 tree.heading("Nom", text="Nom", command=lambda: treeview_sort_column(tree, "Nom", False))
 tree.heading("Genre", text="Genre", command=lambda: treeview_sort_column(tree, "Genre", False))
 tree.heading("Statut", text="Statut", command=lambda: treeview_sort_column(tree, "Statut", False))
+tree.heading("Matchs", text="Matchs", command=lambda: treeview_sort_column(tree, "Matchs", False))
 tree.heading("C1", text="C1", command=lambda: treeview_sort_column(tree, "C1", False))
 tree.heading("winrate", text="winrate", command=lambda: treeview_sort_column(tree, "winrate", False))
 tree.heading("C2", text="C2", command=lambda: treeview_sort_column(tree, "C2", False))
 tree.heading("elo", text="elo", command=lambda: treeview_sort_column(tree, "elo", False))
+tree.heading("C3", text="C3", command=lambda: treeview_sort_column(tree, "C3", False))
+tree.heading("points", text="points", command=lambda: treeview_sort_column(tree, "points", False))
+
 tree.column("Nom", width=120)
 tree.column("Genre", width=40)
 tree.column("Statut", width=80)
+tree.column("Matchs", width=40)
 tree.column("C1", width=40)
 tree.column("winrate", width=50)
 tree.column("C2", width=40)
 tree.column("elo", width=50)
+tree.column("C3", width=40)
+tree.column("points", width=50)
 
 tree.grid(row=1, column=0)
 
@@ -205,7 +227,7 @@ tree.configure(yscrollcommand=scrollbar_player.set)
 def update_list_of_players():
     tree.delete(*tree.get_children())
     for player in tournament.players_global:
-        tree.insert("", "end", iid=player.name, values=(player.name, player.gender, player.status, player.winrate_position, int(player.winrate), player.elo_position, int(player.elo)))
+        tree.insert("", "end", iid=player.name, values=(player.name, player.gender, player.status, player.matches_played, player.winrate_position, int(player.winrate), player.elo_position, int(player.elo), player.points_position, player.points_won))
 
 menu_joueur = tk.Menu(fenetre, tearoff=0)
 menu_joueur.add_command(label="Afficher informations", command=lambda: display_player_info())
@@ -250,6 +272,10 @@ def delete_player():
     if player.status == "En match" :
         messagebox.showwarning("Erreur", "Ce joueur est en match et ne peut pas être supprimé")
         return
+    confirm = messagebox.askyesno("Confirmation de suppression", f"Voulez-vous vraiment supprimer le joueur {player.name} du tournoi ?\nCette action est définitive, les informations et les statistiques seront perdues.")
+    if not confirm:
+        return
+    logging.info(f"Delete player {player.name}")
     tournament.remove_player(player)
     update_all()
 
@@ -316,7 +342,7 @@ def update_list_of_matches():
 menu_match = tk.Menu(fenetre, tearoff=0)
 menu_match.add_command(label="Afficher informations", command=lambda: display_match_info())
 menu_match.add_command(label="Annuler le match", command=lambda: canceling_match())
-menu_match.add_command(label="Entrer les score", command=lambda: scoring_match())
+menu_match.add_command(label="Entrer les scores", command=lambda: scoring_match())
 
 def clic_droit_match(event):
     item_id = tree_list_of_matches.identify_row(event.y)
@@ -388,7 +414,7 @@ def scoring_match():
     fenetre.grab_set()  # Fenêtre modale
     fenetre.bind('<Return>', lambda event: valider())
 
-    tk.Label(fenetre, text=f"Veuillez entrer les resultats pour le match :\n{actual_match.player1.name} et {actual_match.player2.name} contre {actual_match.player3.name} et {actual_match.player4.name}", font=("Arial", 12), pady=10).pack()
+    tk.Label(fenetre, text=f"Veuillez entrer les resultats pour le match :\n{actual_match.player1.name} et {actual_match.player2.name} contre {actual_match.player3.name} et {actual_match.player4.name}", font=("Helvetica", 12, "bold"), pady=10).pack()
 
     contenu = tk.Frame(fenetre, padx=10, pady=10)
     contenu.pack()
@@ -478,6 +504,25 @@ def creating_premade_match():
     fenetre.wait_window()  # Attend que la fenêtre se ferme
     return result
 
+frame_buttons = tk.Frame(fenetre)
+frame_buttons.grid(row=2, column=0, columnspan=4, pady=10)
+
+btn0 = tk.Button(frame_buttons, text="Sauvegarder !!", command=lambda: saving_tounament())
+btn1 = tk.Button(frame_buttons, text="Ajouter un.e Joueur.euse", command=lambda: adding_player())
+btn2 = tk.Button(frame_buttons, text="Créer un mixte aléatoire", command=lambda: creating_new_match("mixte"))
+btn3 = tk.Button(frame_buttons, text="Créer un double Femme aléatoire", command=lambda: creating_new_match("double_F"))
+btn4 = tk.Button(frame_buttons, text="Créer un double Homme aléatoire", command=lambda: creating_new_match("double_H"))
+btn5 = tk.Button(frame_buttons, text="Créer un match aléatoire", command=lambda: creating_new_match("random"))
+btn6 = tk.Button(frame_buttons, text="Choisir une composition", command=lambda: creating_premade_match())
+
+# Affichage côte à côte
+btn0.pack(side="left", padx=5)
+btn1.pack(side="left", padx=5)
+btn2.pack(side="left", padx=5)
+btn3.pack(side="left", padx=5)
+btn4.pack(side="left", padx=5)
+btn5.pack(side="left", padx=5)
+btn6.pack(side="left", padx=5)
 
 def update_all():
     update_list_of_players()

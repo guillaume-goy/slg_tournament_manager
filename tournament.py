@@ -34,8 +34,6 @@ class Tournament :
                 f"Waiting players: {[player.name for player in self.players_active]}" + "\n" +
                 f"Waiting players M: {[player.name for player in self.players_active_M]}" + "\n" +
                 f"Waiting players F: {[player.name for player in self.players_active_F]}" + "\n" +
-                f"Scores: {self.winrates}" + "\n" +
-                f"ELOS: {self.leaderboard}" + "\n" +
                 f"Ongoing matches: {[str(match) for match in self.ongoing_matches]}" + "\n" +
                 f"Matches Finifhed: {[str(match) for match in self.played_matches]}"
         )
@@ -53,6 +51,7 @@ class Tournament :
         self.refresh_winrates()
         self.update_elo_position()
         self.update_winrate_position()
+        self.update_points_position()
         logging.info("refresh leaderboards")
 
     def add_player(self, player):
@@ -308,6 +307,14 @@ class Tournament :
         for i, player in enumerate(sorted_players, start=1):
             player.winrate_position = i
         logging.info("updated players elo position")
+
+    def update_points_position(self):
+        sorted_players = sorted(self.players_global, key=lambda j: j.points_won, reverse=True)
+        
+        # Mise à jour des rangs
+        for i, player in enumerate(sorted_players, start=1):
+            player.points_position = i
+        logging.info("updated players points position")
 
     def verif(self):
         #verif elo
