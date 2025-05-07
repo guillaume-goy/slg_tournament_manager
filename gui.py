@@ -2,10 +2,10 @@ import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter import simpledialog, messagebox, filedialog
 from player import Player
-from match import Match, Score
+from match import Match
+from score import Score
 from tournament import Tournament
 from utils import save_tournament, load_tournament, clean_str, change_log_file, TYPE_DICO_FR
-import random
 from itertools import combinations
 import logging
 import os
@@ -120,7 +120,7 @@ def creating_new_match(type):
     if type not in ["random", "double_H", "double_F", "mixte"]:
         messagebox.showerror("Erreur", "Le type de match selectionné n'est pas conforme")
     check = tournament.create_random_match(cat=type)
-    if check == 0:
+    if check == 1:
         messagebox.showerror("Erreur", f"Nous n'avons pas pu créer de match {TYPE_DICO_FR[type]}\nVeuillez vérifier que les conditions sont respectées et reessayer.")
         return
     else :
@@ -224,7 +224,7 @@ tree.configure(yscrollcommand=scrollbar_player.set)
 def update_list_of_players():
     tree.delete(*tree.get_children())
     for player in tournament.players_global:
-        tree.insert("", "end", iid=player.name, values=(player.name, player.gender, player.status, player.matches_played, player.winrate_position, int(player.winrate), player.elo_position, int(player.elo), player.points_position, player.points_won))
+        tree.insert("", "end", iid=player.name, values=(player.name, player.gender, player.status, player.matches_played, player.winrate_position, int(player.winrate), player.elo_position, int(player.elo), player.points_position, player.points_per_set))
 
 menu_joueur = tk.Menu(fenetre, tearoff=0)
 menu_joueur.add_command(label="Afficher informations", command=lambda: display_player_info())
@@ -350,6 +350,7 @@ def clic_droit_match(event):
         menu_match.tk_popup(event.x_root, event.y_root)
 
 tree_list_of_matches.bind("<Button-3>", clic_droit_match)
+tree_list_of_matches.bind("<Double-Button-1>", clic_droit_match)
 
 def display_match_info():
     match_number = int(tree_list_of_matches.match_selectionne)
@@ -361,6 +362,7 @@ def display_match_info():
         f"{actual_match.player3.name} ({actual_match.player3_elo}) et {actual_match.player4.name} ({actual_match.player4_elo})\n" +
         f"{actual_match.score or 'Match en cours'}\n" +
         f"Prédictions ELO : {actual_match.expected_result}\n" +
+        f"Resultat du match : {actual_match.result}\n" +
         f"Enjeu sur ELO : {actual_match.delta}\n" +
         f"Match {actual_match.status}"
         )

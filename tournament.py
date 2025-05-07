@@ -1,5 +1,4 @@
 #tournament.py
-import random
 import math
 import numpy as np
 import logging
@@ -7,6 +6,7 @@ from collections import Counter
 
 from player import Player
 from match import Match
+from score import Score
 from config import ELO_START, REJECTION_NUMBER
 
 class Tournament :
@@ -40,7 +40,7 @@ class Tournament :
     
     def refresh_winrates(self):
         for player in self.players_global:
-            player.update_winrate()
+            player.update_all()
 
     def refresh_leaderboard(self):
         for player in self.players_global:
@@ -54,7 +54,7 @@ class Tournament :
         self.update_points_position()
         logging.info("refresh leaderboards")
 
-    def add_player(self, player):
+    def add_player(self, player : Player):
         self.players_global.append(player)
         self.players_active.append(player)
         if player.gender == "M" : 
@@ -64,7 +64,7 @@ class Tournament :
         logging.info(f"add player to tournament : {player.name} ({player.gender})")
         #self.all_refreshes()
 
-    def remove_player(self, player):
+    def remove_player(self, player : Player):
         self.players_global.remove(player)
         if player in self.players_active :
             self.players_active.remove(player)
@@ -77,7 +77,7 @@ class Tournament :
         logging.info(f"remove player from tournament : {player.name} ({player.gender})")
         self.all_refreshes()
 
-    def break_player(self, player):
+    def break_player(self, player : Player):
         if player in self.players_in_match :
             logging.warning("break player tries to break a player involved in a match")
             return 1
@@ -94,7 +94,7 @@ class Tournament :
         logging.info(f"player {player.name} takes a break")
         return 0
 
-    def unbreak_player(self, player):
+    def unbreak_player(self, player : Player):
         if player in self.players_in_match :
             logging.warning("unbreak player tries to unbreak a player involved in a match")
             return 1
@@ -115,7 +115,7 @@ class Tournament :
             logging.error("unbreak_player tries to unbreak a player not in the break list")
             return 3
 
-    def match_player(self, player):
+    def match_player(self, player : Player):
         if player.gender == "M" : 
             self.players_active_M.remove(player)
         else:
@@ -125,7 +125,7 @@ class Tournament :
         player.status = "En match"
         logging.info(f"{player.name} starts a match")
 
-    def unmatch_player(self, player):
+    def unmatch_player(self, player : Player):
         if player in self.players_in_match :
             self.players_in_match.remove(player)
             self.players_active.append(player)
@@ -174,7 +174,11 @@ class Tournament :
             while (rejection_cpt>0 and cond):
                 rejection_cpt -= 1
                 try :
-                    [player1, player2, player3, player4] = self.random_sampling(self.players_active_M, 4)
+                    [player1, player3] = self.random_sampling(self.players_active_M, 2)
+                    choice_list_of_player2 = [player for player in self.players_active_M if player not in player1.partners_history and player != player1 and player != player3]
+                    [player2] = self.random_sampling(choice_list_of_player2)
+                    choice_list_of_player4 = [player for player in self.players_active_M if player not in player3.partners_history and player != player1 and player != player2 and player != player3]
+                    [player4] = self.random_sampling(choice_list_of_player4)
                 except :
                     logging.warning(f"create_random_match : Unable to find a combination to start a {cat} game --> We try again (remaining attempts: {rejection_cpt})")
                     [player1, player2, player3, player4] = [None, None, None, None]
@@ -186,7 +190,11 @@ class Tournament :
             while (rejection_cpt>0 and cond):
                 rejection_cpt -= 1
                 try :
-                    [player1, player2, player3, player4] = self.random_sampling(self.players_active_F, 4)
+                    [player1, player3] = self.random_sampling(self.players_active_F, 2)
+                    choice_list_of_player2 = [player for player in self.players_active_F if player not in player1.partners_history and player != player1 and player != player3]
+                    [player2] = self.random_sampling(choice_list_of_player2)
+                    choice_list_of_player4 = [player for player in self.players_active_F if player not in player3.partners_history and player != player1 and player != player2 and player != player3]
+                    [player4] = self.random_sampling(choice_list_of_player4)
                 except :
                     logging.warning(f"create_random_match : Unable to find a combination to start a {cat} game --> We try again (remaining attempts: {rejection_cpt})")
                     [player1, player2, player3, player4] = [None, None, None, None]
@@ -222,10 +230,10 @@ class Tournament :
             list_of_players[2].update_history(list_of_players[3])
 
             self.ongoing_matches.append(new_match)
-            return 1
+            return 0
         else :
             logging.info(f"create_random_match : failed to create a {cat} game.")
-            return 0
+            return 1
      
     def create_premade_match(self, players_list):
         for player in players_list :
@@ -252,7 +260,7 @@ class Tournament :
         self.ongoing_matches.append(new_match)
         return 0
     
-    def cancel_match(self, match):
+    def cancel_match(self, match : Match):
         #Annule un match
         if match.status == "Terminé":
             logging.error("trying to cancel a finished match")
@@ -275,7 +283,7 @@ class Tournament :
         logging.info(f"Cancelled a match :\n{match}")
         self.all_refreshes()
 
-    def finish_match(self, match, score):
+    def finish_match(self, match : Match, score : Score):
         logging.info(f"Ending a match: {match}")
         match.set_score(score)
 
@@ -309,7 +317,7 @@ class Tournament :
         logging.info("updated players elo position")
 
     def update_points_position(self):
-        sorted_players = sorted(self.players_global, key=lambda j: j.points_won, reverse=True)
+        sorted_players = sorted(self.players_global, key=lambda j: j.points_per_set, reverse=True)
         
         # Mise à jour des rangs
         for i, player in enumerate(sorted_players, start=1):
