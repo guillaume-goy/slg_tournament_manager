@@ -159,10 +159,10 @@ class Tournament :
                 rejection_cpt -= 1
                 try :
                     [player1_M, player2_M] = self.random_sampling(self.players_active_M, 2)
-                    choice_list_for_player1_M = [player for player in self.players_active_F if player not in player1_M.partners_history]
-                    [player1_F] = self.random_sampling(choice_list_for_player1_M)
-                    choice_list_for_player1_M = [player for player in self.players_active_F if player not in player1_M.partners_history and player != player1_F]
-                    [player2_F] = self.random_sampling(choice_list_for_player1_M)
+                    choice_list_for_player1_F = [player for player in self.players_active_F if player not in player1_M.partners_history]
+                    [player1_F] = self.random_sampling(choice_list_for_player1_F)
+                    choice_list_for_player2_F = [player for player in self.players_active_F if player not in player2_M.partners_history and player != player1_F]
+                    [player2_F] = self.random_sampling(choice_list_for_player2_F)
                 except :
                     logging.warning(f"create_random_match : Unable to find a combination to start a {cat} game --> We try again (remaining attempts: {rejection_cpt})")
                     [player1_F, player1_M, player2_F, player2_M] = [None, None, None, None]
