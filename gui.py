@@ -185,46 +185,132 @@ def treeview_sort_column(tv, col, reverse):
 
     tv.heading(col, command=lambda: treeview_sort_column(tv, col, not reverse))
 
-#-------------------- List of players -------------------------------:
-frame_list_of_players = tk.Frame(fenetre)
-frame_list_of_players.grid(row=0, column=0, padx=10, pady=10, sticky="n")
+#-------------------- INFOS PLAYERS FRAME -------------------------------
 
-title = tk.Label(frame_list_of_players, text="Liste des joueuses et joueurs du tournoi", font=("Helvetica", 12, "bold"))
-title.grid(row=0, column=0, sticky="w", pady=(0, 5))
+frame_infos_players = tk.Frame(fenetre)
+frame_infos_players.grid(row=0, column=0, padx=10, pady=10, sticky="n")
 
-tree = ttk.Treeview(frame_list_of_players, columns=("Nom", "Genre", "Statut", "Matchs", "C1", "winrate", "C2", "elo", "C3", "points"), show="headings", height=20)
-tree.heading("Nom", text="Nom", command=lambda: treeview_sort_column(tree, "Nom", False))
-tree.heading("Genre", text="Genre", command=lambda: treeview_sort_column(tree, "Genre", False))
-tree.heading("Statut", text="Statut", command=lambda: treeview_sort_column(tree, "Statut", False))
-tree.heading("Matchs", text="Matchs", command=lambda: treeview_sort_column(tree, "Matchs", False))
-tree.heading("C1", text="C1", command=lambda: treeview_sort_column(tree, "C1", False))
-tree.heading("winrate", text="winrate", command=lambda: treeview_sort_column(tree, "winrate", False))
-tree.heading("C2", text="C2", command=lambda: treeview_sort_column(tree, "C2", False))
-tree.heading("elo", text="elo", command=lambda: treeview_sort_column(tree, "elo", False))
-tree.heading("C3", text="C3", command=lambda: treeview_sort_column(tree, "C3", False))
-tree.heading("points", text="points", command=lambda: treeview_sort_column(tree, "points", False))
+title_info_players = tk.Label(frame_infos_players, text="Liste des joueuses et joueurs du tournoi", font=("Helvetica", 12, "bold"))
+title_info_players.grid(row=0, column=0, columnspan=2, sticky="n", pady=(0, 5))
 
-tree.column("Nom", width=120)
-tree.column("Genre", width=40)
-tree.column("Statut", width=80)
-tree.column("Matchs", width=40)
-tree.column("C1", width=40)
-tree.column("winrate", width=50)
-tree.column("C2", width=40)
-tree.column("elo", width=50)
-tree.column("C3", width=40)
-tree.column("points", width=50)
+#-------------------- INFOS PLAYERS -----------------------------------
 
-tree.grid(row=1, column=0)
+tree_info_players = ttk.Treeview(frame_infos_players, columns=("Nom", "Genre", "Statut", "Matchs"), show="headings", height=20)
+tree_info_players.heading("Nom", text="Nom", command=lambda: treeview_sort_column(tree_info_players, "Nom", False))
+tree_info_players.heading("Genre", text="Genre", command=lambda: treeview_sort_column(tree_info_players, "Genre", False))
+tree_info_players.heading("Statut", text="Statut", command=lambda: treeview_sort_column(tree_info_players, "Statut", False))
+tree_info_players.heading("Matchs", text="Matchs", command=lambda: treeview_sort_column(tree_info_players, "Matchs", False))
 
-scrollbar_player = ttk.Scrollbar(frame_list_of_players, orient="vertical", command=tree.yview)
-scrollbar_player.grid(row=1, column=1, sticky="ns")
-tree.configure(yscrollcommand=scrollbar_player.set)
+tree_info_players.column("Nom", width=120)
+tree_info_players.column("Genre", width=40)
+tree_info_players.column("Statut", width=80)
+tree_info_players.column("Matchs", width=60)
+
+tree_info_players.grid(row=1, column=0)
 
 def update_list_of_players():
-    tree.delete(*tree.get_children())
+    tree_info_players.delete(*tree_info_players.get_children())
     for player in tournament.players_global:
-        tree.insert("", "end", iid=player.name, values=(player.name, player.gender, player.status, player.matches_played, player.winrate_position, int(player.winrate), player.elo_position, int(player.elo), player.points_position, player.points_per_set))
+        tree_info_players.insert("", "end", iid=player.name, values=(player.name, player.gender, player.status, player.matches_played))
+    treeview_sort_column(tree_info_players, "Nom", False)
+
+scrollbar_player = ttk.Scrollbar(frame_infos_players, orient="vertical", command=tree_info_players.yview)
+scrollbar_player.grid(row=1, column=1, sticky="ns")
+tree_info_players.configure(yscrollcommand=scrollbar_player.set)
+
+#----------------------- LEADERBOARDS FRAME ------------------------------------
+
+frame_leaderboards = tk.Frame(fenetre)
+frame_leaderboards.grid(row=0, column=1, padx=10, pady=10, sticky="n")
+
+title_leaderboards = tk.Label(frame_leaderboards, text="Classements", font=("Helvetica", 12, "bold"))
+title_leaderboards.grid(row=0, column=0, columnspan=6, sticky="n", pady=(0, 5))
+
+#----------------------- LEADERBOARD 1 : WINRATE ------------------------------------
+
+tree_leaderboard1 = ttk.Treeview(frame_leaderboards, columns=("C.", "Nom", "Taux"), show="headings", height=20)
+
+tree_leaderboard1.heading("C.", text="C.", command=lambda: treeview_sort_column(tree_leaderboard1, "C.", False))
+tree_leaderboard1.heading("Nom", text="Nom")
+tree_leaderboard1.heading("Taux", text="Taux")
+
+tree_leaderboard1.column("C.", width=40)
+tree_leaderboard1.column("Nom", width=120)
+tree_leaderboard1.column("Taux", width=50)
+
+tree_leaderboard1.grid(row=1, column=0)
+
+def update_leaderboard1():
+    tree_leaderboard1.delete(*tree_leaderboard1.get_children())
+    for player in tournament.players_global:
+        tree_leaderboard1.insert("", "end", iid=player.name, values=(player.winrate_position, player.name, int(player.winrate)))
+    treeview_sort_column(tree_leaderboard1, "C.", False)
+
+scrollbar_leaderboard1 = ttk.Scrollbar(frame_leaderboards, orient="vertical", command=tree_leaderboard1.yview)
+scrollbar_leaderboard1.grid(row=1, column=1, sticky="ns")
+tree_leaderboard1.configure(yscrollcommand=scrollbar_leaderboard1.set)
+
+#----------------------- LEADERBOARD 2 : ELO ------------------------------------
+
+tree_leaderboard2 = ttk.Treeview(frame_leaderboards, columns=("C.", "Nom", "ELO"), show="headings", height=20)
+
+tree_leaderboard2.heading("C.", text="C.", command=lambda: treeview_sort_column(tree_leaderboard2, "C.", False))
+tree_leaderboard2.heading("Nom", text="Nom")
+tree_leaderboard2.heading("ELO", text="ELO")
+
+tree_leaderboard2.column("C.", width=40)
+tree_leaderboard2.column("Nom", width=120)
+tree_leaderboard2.column("ELO", width=50)
+
+tree_leaderboard2.grid(row=1, column=2)
+
+def update_leaderboard2():
+    tree_leaderboard2.delete(*tree_leaderboard2.get_children())
+    for player in tournament.players_global:
+        tree_leaderboard2.insert("", "end", iid=player.name, values=(player.elo_position, player.name, int(player.elo)))
+    treeview_sort_column(tree_leaderboard2, "C.", False)
+
+scrollbar_leaderboard2 = ttk.Scrollbar(frame_leaderboards, orient="vertical", command=tree_leaderboard2.yview)
+scrollbar_leaderboard2.grid(row=1, column=3, sticky="ns")
+tree_leaderboard2.configure(yscrollcommand=scrollbar_leaderboard2.set)
+
+#----------------------- LEADERBOARD 3 : POINTS PER SET ------------------------------------
+
+tree_leaderboard3 = ttk.Treeview(frame_leaderboards, columns=("C.", "Nom", "Points"), show="headings", height=20)
+
+tree_leaderboard3.heading("C.", text="C.", command=lambda: treeview_sort_column(tree_leaderboard3, "C.", False))
+tree_leaderboard3.heading("Nom", text="Nom")
+tree_leaderboard3.heading("Points", text="Points")
+
+tree_leaderboard3.column("C.", width=40)
+tree_leaderboard3.column("Nom", width=120)
+tree_leaderboard3.column("Points", width=50)
+
+tree_leaderboard3.grid(row=1, column=4)
+
+def update_leaderboard3():
+    tree_leaderboard3.delete(*tree_leaderboard3.get_children())
+    for player in tournament.players_global:
+        tree_leaderboard3.insert("", "end", iid=player.name, values=(player.points_position, player.name, player.points_per_set))
+    treeview_sort_column(tree_leaderboard3, "C.", False)
+
+scrollbar_leaderboard3 = ttk.Scrollbar(frame_leaderboards, orient="vertical", command=tree_leaderboard3.yview)
+scrollbar_leaderboard3.grid(row=1, column=5, sticky="ns")
+tree_leaderboard3.configure(yscrollcommand=scrollbar_leaderboard3.set)
+
+#----------------------------- Refreshes ----------------------------
+
+def update_all():
+    update_players_frame()
+    update_list_of_matches()
+
+def update_players_frame():
+    update_leaderboard1()
+    update_leaderboard2()
+    update_leaderboard3()
+    update_list_of_players()
+
+#---------------------------- INFOS PLAYERS MENU -----------------------------
 
 menu_joueur = tk.Menu(fenetre, tearoff=0)
 menu_joueur.add_command(label="Afficher informations", command=lambda: display_player_info())
@@ -233,18 +319,20 @@ menu_joueur.add_command(label="Supprimer", command=lambda: delete_player())
 menu_joueur.add_command(label="Envoyer en pause", command=lambda: breaking_player())
 menu_joueur.add_command(label="Remettre en attente", command=lambda: unbreaking_player())
 
+#---------------------------- FUNCTIONS -----------------------------
+
 def clic_droit_joueur(event):
-    item_id = tree.identify_row(event.y)
+    item_id = tree_info_players.identify_row(event.y)
     if item_id:
-        tree.selection_set(item_id)
-        tree.joueur_selectionne = item_id
+        tree_info_players.selection_set(item_id)
+        tree_info_players.joueur_selectionne = item_id
         menu_joueur.tk_popup(event.x_root, event.y_root)
 
-tree.bind("<Button-3>", clic_droit_joueur)
-tree.bind("<Double-Button-1>", clic_droit_joueur)
+tree_info_players.bind("<Button-3>", clic_droit_joueur)
+tree_info_players.bind("<Double-Button-1>", clic_droit_joueur)
 
 def breaking_player():
-    name = tree.joueur_selectionne
+    name = tree_info_players.joueur_selectionne
     player = next((p for p in tournament.players_global if p.name == name), None)
     check = tournament.break_player(player)
     if check != 0 :
@@ -252,7 +340,7 @@ def breaking_player():
     update_all()
 
 def unbreaking_player():
-    name = tree.joueur_selectionne
+    name = tree_info_players.joueur_selectionne
     player = next((p for p in tournament.players_global if p.name == name), None)
     check = tournament.unbreak_player(player)
     if check != 0:
@@ -260,12 +348,12 @@ def unbreaking_player():
     update_all()
 
 def display_player_info():
-    name = tree.joueur_selectionne
+    name = tree_info_players.joueur_selectionne
     player = next((p for p in tournament.players_global if p.name == name), None)
     messagebox.showinfo("Information joueur", f"{player}")
 
 def delete_player():
-    name = tree.joueur_selectionne
+    name = tree_info_players.joueur_selectionne
     player = next((p for p in tournament.players_global if p.name == name), None)
     if player.status == "En match" :
         messagebox.showwarning("Erreur", "Ce joueur est en match et ne peut pas être supprimé")
@@ -300,7 +388,7 @@ def modify_player():
         if cpt > 1:
             logging.warning("Selecting a name already used")
             messagebox.showwarning("Erreur", "ce nom est déjà utilisé, veuillez recommencer en choississant un nom différent.")
-        previous_name = tree.joueur_selectionne
+        previous_name = tree_info_players.joueur_selectionne
         player = [p for p in tournament.players_global if p.name == previous_name][0]
         player.rename(new_name)
         update_all()
@@ -308,14 +396,17 @@ def modify_player():
 
     tk.Button(popup, text="Valider", command=valider).pack(pady=10)
 
-#-------------------- List of matches (Ongoing and finished) -------------------------------:
+#-------------------- MATCHES FRAME  -------------------------------
+
 frame_list_of_matches = tk.Frame(fenetre)
-frame_list_of_matches.grid(row=0, column=2, padx=10, pady=10, sticky="n")
+frame_list_of_matches.grid(row=2, column=0, columnspan=2, padx=10, pady=10, sticky="n")
 
 title_list_of_matches = tk.Label(frame_list_of_matches, text="Liste des matchs", font=("Helvetica", 12, "bold"))
-title_list_of_matches.grid(row=0, column=2, sticky="w", pady=(0, 5))
+title_list_of_matches.grid(row=0, column=0, columnspan=2, sticky="n", pady=(0, 5))
 
-tree_list_of_matches = ttk.Treeview(frame_list_of_matches, columns=("N.", "E1", "E2", "Score", "Statut"), show="headings", height=20)
+#---------------------- MATCHES ------------------------------------------------
+
+tree_list_of_matches = ttk.Treeview(frame_list_of_matches, columns=("N.", "E1", "E2", "Score", "Statut"), show="headings", height=10)
 tree_list_of_matches.heading("N.", text="N.", command=lambda: treeview_sort_column(tree_list_of_matches, "N.", False))
 tree_list_of_matches.heading("E1", text="Equipe 1")
 tree_list_of_matches.heading("E2", text="Equipe 2")
@@ -326,16 +417,19 @@ tree_list_of_matches.column("E1", width=200)
 tree_list_of_matches.column("E2", width=200)
 tree_list_of_matches.column("Score", width=120)
 tree_list_of_matches.column("Statut", width=100)
-tree_list_of_matches.grid(row=1, column=2)
+tree_list_of_matches.grid(row=1, column=0)
 
 scrollbar_matches = ttk.Scrollbar(frame_list_of_matches, orient="vertical", command=tree_list_of_matches.yview)
-scrollbar_matches.grid(row=1, column=3, sticky="ns")
+scrollbar_matches.grid(row=1, column=1, sticky="ns")
 tree_list_of_matches.configure(yscrollcommand=scrollbar_matches.set)
 
 def update_list_of_matches():
     tree_list_of_matches.delete(*tree_list_of_matches.get_children())
     for match in tournament.ongoing_matches + tournament.played_matches:
         tree_list_of_matches.insert("", "end", iid=match.number, values=(match.number, match.player1.name + " et " + match.player2.name, match.player3.name + " et " + match.player4.name, match.score or "----", match.status))
+    treeview_sort_column(tree_list_of_matches, "Statut", False)
+
+#---------------------------------- FUNCTIONS ---------------------------------------------
 
 menu_match = tk.Menu(fenetre, tearoff=0)
 menu_match.add_command(label="Afficher informations", command=lambda: display_match_info())
@@ -500,8 +594,12 @@ def creating_premade_match():
     fenetre.wait_window() 
     return result
 
+#------------------------------- BUTTONS FRAME -------------------------------------
+
 frame_buttons = tk.Frame(fenetre)
-frame_buttons.grid(row=2, column=0, columnspan=4, pady=10)
+frame_buttons.grid(row=1, column=0, columnspan=2, pady=10, padx=10)
+
+#-------------------------------- BUTTONS ------------------------------------------
 
 btn0 = tk.Button(frame_buttons, text="Sauvegarder !!", command=lambda: saving_tounament())
 btn1 = tk.Button(frame_buttons, text="Ajouter un.e Joueur.euse", command=lambda: adding_player())
@@ -519,9 +617,7 @@ btn4.pack(side="left", padx=5)
 btn5.pack(side="left", padx=5)
 btn6.pack(side="left", padx=5)
 
-def update_all():
-    update_list_of_players()
-    update_list_of_matches()
+#------------------------------ FENETRE LOOP -----------------------------------
 
 fenetre.config(menu=menubar)
 
