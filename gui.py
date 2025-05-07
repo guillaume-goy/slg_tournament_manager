@@ -59,9 +59,8 @@ def adding_player(event=None):
     entree.pack(pady=5)
     entree.focus_set()
 
-    choix_var = tk.StringVar(value="")  # Valeur vide par défaut
+    choix_var = tk.StringVar(value="")
 
-    # Radio buttons
     tk.Label(popup, text="Choisissez une option :").pack(pady=(10, 0))
     tk.Radiobutton(popup, text="Femme", variable=choix_var, value="F").pack()
     tk.Radiobutton(popup, text="Homme", variable=choix_var, value="M").pack()
@@ -177,15 +176,13 @@ menubar.add_cascade(label="Aide", menu=menu4)
 def treeview_sort_column(tv, col, reverse):
     l = [(tv.set(k, col), k) for k in tv.get_children('')]
     try:
-        l.sort(key=lambda t: int(t[0]), reverse=reverse)  # si numérique
+        l.sort(key=lambda t: int(t[0]), reverse=reverse)
     except ValueError:
-        l.sort(reverse=reverse)  # sinon tri alphabétique
+        l.sort(reverse=reverse)
 
-    # Réorganiser les lignes
     for index, (val, k) in enumerate(l):
         tv.move(k, '', index)
 
-    # Réassocier le clic pour inverser le tri au prochain clic
     tv.heading(col, command=lambda: treeview_sort_column(tv, col, not reverse))
 
 #-------------------- List of players -------------------------------:
@@ -411,7 +408,7 @@ def scoring_match():
 
     fenetre = tk.Toplevel()
     fenetre.title("Entrée de valeurs")
-    fenetre.grab_set()  # Fenêtre modale
+    fenetre.grab_set() 
     fenetre.bind('<Return>', lambda event: valider())
 
     tk.Label(fenetre, text=f"Veuillez entrer les resultats pour le match :\n{actual_match.player1.name} et {actual_match.player2.name} contre {actual_match.player3.name} et {actual_match.player4.name}", font=("Helvetica", 12, "bold"), pady=10).pack()
@@ -458,7 +455,6 @@ def creating_premade_match():
             messagebox.showerror("Erreur", "Tous les joueur.euse.s doivent être différent.es.")
             return
 
-        # Sauvegarder les joueurs choisis et fermer la fenêtre
         list_of_players = []
         for name in selections :
             find_player = [player for player in tournament.players_active if player.name == name] + [player for player in tournament.players_inactive if player.name == name]
@@ -472,16 +468,14 @@ def creating_premade_match():
         fenetre.destroy()
         messagebox.showinfo("Match créé", f"Match créé avec succès :\n{tournament.ongoing_matches[-1]}")
 
-    result = None  # Variable qui stockera le résultat
+    result = None 
 
     fenetre = tk.Toplevel()
     fenetre.title("Sélection des joueurs")
-    fenetre.grab_set()  # Modale
+    fenetre.grab_set()
 
-    # Description
     tk.Label(fenetre, text="Veuillez choisir 4 joueurs différents pour le match :", font=("Arial", 12)).pack(pady=10)
 
-    # Ligne de sélection
     ligne = tk.Frame(fenetre)
     ligne.pack(pady=10)
 
@@ -497,11 +491,10 @@ def creating_premade_match():
         elif i == 2:
             tk.Label(ligne, text=" et ").pack(side="left")
 
-    # Bouton de validation
     bouton = tk.Button(fenetre, text="Valider", command=valider)
     bouton.pack(pady=10)
 
-    fenetre.wait_window()  # Attend que la fenêtre se ferme
+    fenetre.wait_window() 
     return result
 
 frame_buttons = tk.Frame(fenetre)
@@ -515,7 +508,6 @@ btn4 = tk.Button(frame_buttons, text="Créer un double Homme aléatoire", comman
 btn5 = tk.Button(frame_buttons, text="Créer un match aléatoire", command=lambda: creating_new_match("random"))
 btn6 = tk.Button(frame_buttons, text="Choisir une composition", command=lambda: creating_premade_match())
 
-# Affichage côte à côte
 btn0.pack(side="left", padx=5)
 btn1.pack(side="left", padx=5)
 btn2.pack(side="left", padx=5)

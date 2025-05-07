@@ -142,7 +142,7 @@ class Tournament :
         if len(list_of_players) < k:
             return None
         weights = []
-        #compute probabilities*
+        #compute probabilities
         for player in list_of_players:
             weights.append(1/math.pow(2,player.matches_played))
         total = sum(weights)
