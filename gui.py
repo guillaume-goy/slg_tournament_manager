@@ -241,6 +241,7 @@ def clic_droit_joueur(event):
         menu_joueur.tk_popup(event.x_root, event.y_root)
 
 tree.bind("<Button-3>", clic_droit_joueur)
+tree.bind("<Double-Button-1>", clic_droit_joueur)
 
 def breaking_player():
     name = tree.joueur_selectionne
