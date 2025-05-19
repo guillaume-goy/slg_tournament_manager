@@ -169,7 +169,7 @@ menubar.add_cascade(label="Matchs", menu=menu3)
 
 menu4 = tk.Menu(menubar, tearoff=0)
 menu4.add_command(label="Informations sur le tournoi", command=infos)
-menu3.add_separator()
+menu4.add_separator()
 menu4.add_command(label="A propos", command=apropos)
 menubar.add_cascade(label="Aide", menu=menu4)
 

@@ -7,7 +7,7 @@ from collections import Counter
 from player import Player
 from match import Match
 from score import Score
-from config import ELO_START, REJECTION_NUMBER
+from config import ELO_START, REJECTION_NUMBER, ELO_THRESHOLD_COEFF
 
 class Tournament :
     def __init__(self, name):
@@ -25,6 +25,7 @@ class Tournament :
         self.ongoing_matches = []
         self.winrates = {} # pourcentage de matches gagnés
         self.leaderboard = {} # moyenne nombres de points par match
+        self.elo_std = 1
 
     def __str__(self):
         return (f"General information about: {self.name}" + "\n" +
@@ -46,12 +47,19 @@ class Tournament :
         for player in self.players_global:
             self.leaderboard[player.name] = player.elo
 
+    def refresh_elo_std(self):
+        elos = []
+        for player in self.players_global:
+            elos.append(player.elo)
+        self.elo_std = ELO_THRESHOLD_COEFF*np.std(elos) + 1
+
     def all_refreshes(self):
         self.refresh_leaderboard()
         self.refresh_winrates()
         self.update_elo_position()
         self.update_winrate_position()
         self.update_points_position()
+        self.refresh_elo_std()
         logging.info("refresh leaderboards")
 
     def add_player(self, player : Player):
@@ -149,11 +157,17 @@ class Tournament :
         normalised_weights = [w / total for w in weights]
         list_of_selected_players = np.random.choice(list_of_players, size=k, replace=False, p=normalised_weights)
         return list(list_of_selected_players) 
+    
+    def elo_team_diff_check(self, list_of_players):
+        elo_diff = list_of_players[0].elo + list_of_players[1].elo - list_of_players[2].elo - list_of_players[3].elo
+        return abs(elo_diff) < self.elo_std
 
     def create_random_match(self, cat="random"):
+        self.refresh_elo_std()
         list_of_players = []
         rejection_cpt = REJECTION_NUMBER
         cond = True
+        logging.info(f"We try to create a match with elo diff lower than {self.elo_std}")
         if cat == "mixte":
             while (rejection_cpt>0 and cond):
                 rejection_cpt -= 1
@@ -166,7 +180,7 @@ class Tournament :
                 except :
                     logging.warning(f"create_random_match : Unable to find a combination to start a {cat} game --> We try again (remaining attempts: {rejection_cpt})")
                     [player1_F, player1_M, player2_F, player2_M] = [None, None, None, None]
-                if all(x is not None for x in [player1_F, player1_M, player2_F, player2_M]):
+                if all(x is not None for x in [player1_F, player1_M, player2_F, player2_M]) and self.elo_team_diff_check([player1_F, player1_M, player2_F, player2_M]) :
                     cond = False
                     list_of_players = [player1_F, player1_M, player2_F, player2_M]
 
@@ -182,7 +196,7 @@ class Tournament :
                 except :
                     logging.warning(f"create_random_match : Unable to find a combination to start a {cat} game --> We try again (remaining attempts: {rejection_cpt})")
                     [player1, player2, player3, player4] = [None, None, None, None]
-                if all(x is not None for x in [player1, player2, player3, player4]):
+                if all(x is not None for x in [player1, player2, player3, player4]) and self.elo_team_diff_check([player1, player2, player3, player4]):
                     cond = False
                     list_of_players = [player1, player2, player3, player4]
 
@@ -198,7 +212,7 @@ class Tournament :
                 except :
                     logging.warning(f"create_random_match : Unable to find a combination to start a {cat} game --> We try again (remaining attempts: {rejection_cpt})")
                     [player1, player2, player3, player4] = [None, None, None, None]
-                if all(x is not None for x in [player1, player2, player3, player4]):
+                if all(x is not None for x in [player1, player2, player3, player4]) and self.elo_team_diff_check([player1, player2, player3, player4]):
                     cond = False
                     list_of_players = [player1, player2, player3, player4]
 
@@ -210,7 +224,7 @@ class Tournament :
                 except :
                     logging.warning(f"create_random_match : Unable to find a combination to start a {cat} game --> We try again (remaining attempts: {rejection_cpt})")
                     [player1, player2, player3, player4] = [None, None, None, None]
-                if all(x is not None for x in [player1, player2, player3, player4]):
+                if all(x is not None for x in [player1, player2, player3, player4]) and self.elo_team_diff_check([player1, player2, player3, player4]):
                     cond = False
                     list_of_players = [player1, player2, player3, player4]
         if list_of_players != []:
