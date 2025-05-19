@@ -19,12 +19,13 @@ class Tournament :
         self.players_active_F = []
         self.players_inactive = [] #Players who take break / stop the tournament
         self.players_in_match = [] #Players who are involve in an ongoing match
+
         self.number_of_match = 0
 
         self.played_matches = []
         self.ongoing_matches = []
-        self.winrates = {} # pourcentage de matches gagnés
-        self.leaderboard = {} # moyenne nombres de points par match
+        #self.winrates = {} # pourcentage de matches gagnés
+        #self.leaderboard = {} # moyenne nombres de points par match
         self.elo_std = 1
 
     def __str__(self):
@@ -38,6 +39,24 @@ class Tournament :
                 f"Ongoing matches: {[str(match) for match in self.ongoing_matches]}" + "\n" +
                 f"Matches Finifhed: {[str(match) for match in self.played_matches]}"
         )
+    
+    def compute_statistics(self):
+        nb_f = 0
+        nb_h = 0
+        for player in self.players_global :
+            if player.gender == "F":
+                nb_f += 1
+            else :
+                nb_h += 1
+        #dF, dH, mixte, rand
+        TH = (nb_h + nb_f)(nb_h + nb_f -1)
+        PL = [0,0,0,0]
+        for match in self.played_matches + self.ongoing_matches:
+            PL[0] += match.type == "dF"
+            PL[1] += match.type == "dH"
+            PL[2] += match.type == "mixte"
+            PL[3] += match.type == "rand"
+        return PL, TH
     
     def refresh_winrates(self):
         for player in self.players_global:
@@ -60,7 +79,7 @@ class Tournament :
         self.update_winrate_position()
         self.update_points_position()
         self.refresh_elo_std()
-        logging.info("refresh leaderboards")
+        logging.info("refresh all information")
 
     def add_player(self, player : Player):
         self.players_global.append(player)
@@ -154,8 +173,8 @@ class Tournament :
         for player in list_of_players:
             weights.append(1/math.pow(2,player.matches_played))
         total = sum(weights)
-        normalised_weights = [w / total for w in weights]
-        list_of_selected_players = np.random.choice(list_of_players, size=k, replace=False, p=normalised_weights)
+        normalized_weights = [w / total for w in weights]
+        list_of_selected_players = np.random.choice(list_of_players, size=k, replace=False, p=normalized_weights)
         return list(list_of_selected_players) 
     
     def elo_team_diff_check(self, list_of_players):
@@ -227,6 +246,7 @@ class Tournament :
                 if all(x is not None for x in [player1, player2, player3, player4]) and self.elo_team_diff_check([player1, player2, player3, player4]):
                     cond = False
                     list_of_players = [player1, player2, player3, player4]
+
         if list_of_players != []:
             new_match = Match(list_of_players)
             self.number_of_match += 1

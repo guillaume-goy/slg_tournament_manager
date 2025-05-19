@@ -9,6 +9,7 @@ from utils import save_tournament, load_tournament, clean_str, change_log_file, 
 from itertools import combinations
 import logging
 import os
+import numpy as np
 
 logging.basicConfig(
     filename='general_log.log',
@@ -617,8 +618,17 @@ btn4.pack(side="left", padx=5)
 btn5.pack(side="left", padx=5)
 btn6.pack(side="left", padx=5)
 
+#-------------------------------- STATISTICS FRAME -----------------------------
+
+frame_statistics = tk.Frame(fenetre)
+frame_statistics.grid(row=2, column=0, columnspan=2, pady=10, padx=10)
+
+#------------------------------- STATISTICS -----------------------------------
+
+PL, TH = tournament.compute_statistics()
+tk.Label(frame_statistics, text=f"Maths joués : {PL[0]} Double Femme, {PL[1]} Double Homme, {PL[2]} Mixtes et {PL[3]} non-renseignés. Total de {np.sum(PL)} matchs joués. (Progression théorique {100*np.sum(PL)/TH:.2f}%)", font=("Arial", 12)).pack(pady=10)
+
 #------------------------------ FENETRE LOOP -----------------------------------
 
 fenetre.config(menu=menubar)
-
 fenetre.mainloop()
