@@ -17,15 +17,27 @@ class Match:
         RA = self.player1.elo + self.player2.elo
         RB = self.player3.elo + self.player4.elo
         P = math.pow(10, (RB-RA)/ELO_SIGMOID_COEF)
+
         self.expected_result = 1 / (1 + P) # Expected probability for p1 and p2.
         self.score = None
         self.result = None
         self.delta = 0
         self.status = "En cours"
         self.number = None
+        self.type = self.determine_match_type()
 
     def __str__(self):
         return f"{self.number} :: {self.player1.name} et {self.player2.name} VS {self.player3.name} et {self.player4.name} ({self.score})"
+    
+    def determine_match_type(self):
+        if self.player1.gender == self.player2.gender == self.player3.gender == self.player4.gender == "M":
+            return "dH"
+        elif self.player1.gender == self.player2.gender == self.player3.gender == self.player4.gender == "F":
+            return "dF"
+        elif (self.player1.gender == self.player3.gender) and (self.player2.gender == self.player4.gender) or (self.player1.gender == self.player4.gender) and (self.player2.gender == self.player3.gender) :
+            return "mixte"
+        else:
+            return "rand"
 
     def set_score(self, score : Score):
         self.score = score

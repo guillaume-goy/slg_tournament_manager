@@ -7,7 +7,7 @@ from collections import Counter
 from player import Player
 from match import Match
 from score import Score
-from config import ELO_START, REJECTION_NUMBER
+from config import ELO_START, REJECTION_NUMBER, ELO_THRESHOLD_COEFF
 
 class Tournament :
     def __init__(self, name):
@@ -19,12 +19,14 @@ class Tournament :
         self.players_active_F = []
         self.players_inactive = [] #Players who take break / stop the tournament
         self.players_in_match = [] #Players who are involve in an ongoing match
+
         self.number_of_match = 0
 
         self.played_matches = []
         self.ongoing_matches = []
-        self.winrates = {} # pourcentage de matches gagnés
-        self.leaderboard = {} # moyenne nombres de points par match
+        #self.winrates = {} # pourcentage de matches gagnés
+        #self.leaderboard = {} # moyenne nombres de points par match
+        self.elo_std = 1
 
     def __str__(self):
         return (f"General information about: {self.name}" + "\n" +
@@ -38,21 +40,41 @@ class Tournament :
                 f"Matches Finifhed: {[str(match) for match in self.played_matches]}"
         )
     
+    def compute_statistics(self):
+        nb_f = 0
+        nb_h = 0
+        for player in self.players_global :
+            if player.gender == "F":
+                nb_f += 1
+            else :
+                nb_h += 1
+        #dF, dH, mixte, rand
+        TH = (nb_h + nb_f)*(nb_h + nb_f -1)//4
+        PL = [0,0,0,0]
+        for match in self.played_matches + self.ongoing_matches:
+            PL[0] += (match.type == "dF")
+            PL[1] += (match.type == "dH")
+            PL[2] += (match.type == "mixte")
+            PL[3] += (match.type == "rand")
+        return PL, TH
+    
     def refresh_winrates(self):
         for player in self.players_global:
             player.update_all()
 
-    def refresh_leaderboard(self):
+    def refresh_elo_std(self):
+        elos = []
         for player in self.players_global:
-            self.leaderboard[player.name] = player.elo
+            elos.append(player.elo)
+        self.elo_std = ELO_THRESHOLD_COEFF*np.std(elos) + 1
 
     def all_refreshes(self):
-        self.refresh_leaderboard()
         self.refresh_winrates()
         self.update_elo_position()
         self.update_winrate_position()
         self.update_points_position()
-        logging.info("refresh leaderboards")
+        self.refresh_elo_std()
+        logging.info("refresh all information")
 
     def add_player(self, player : Player):
         self.players_global.append(player)
@@ -146,14 +168,20 @@ class Tournament :
         for player in list_of_players:
             weights.append(1/math.pow(2,player.matches_played))
         total = sum(weights)
-        normalised_weights = [w / total for w in weights]
-        list_of_selected_players = np.random.choice(list_of_players, size=k, replace=False, p=normalised_weights)
+        normalized_weights = [w / total for w in weights]
+        list_of_selected_players = np.random.choice(list_of_players, size=k, replace=False, p=normalized_weights)
         return list(list_of_selected_players) 
+    
+    def elo_team_diff_check(self, list_of_players):
+        elo_diff = list_of_players[0].elo + list_of_players[1].elo - list_of_players[2].elo - list_of_players[3].elo
+        return abs(elo_diff) < self.elo_std
 
     def create_random_match(self, cat="random"):
+        self.refresh_elo_std()
         list_of_players = []
         rejection_cpt = REJECTION_NUMBER
         cond = True
+        logging.info(f"We try to create a match with elo diff lower than {self.elo_std}")
         if cat == "mixte":
             while (rejection_cpt>0 and cond):
                 rejection_cpt -= 1
@@ -166,7 +194,7 @@ class Tournament :
                 except :
                     logging.warning(f"create_random_match : Unable to find a combination to start a {cat} game --> We try again (remaining attempts: {rejection_cpt})")
                     [player1_F, player1_M, player2_F, player2_M] = [None, None, None, None]
-                if all(x is not None for x in [player1_F, player1_M, player2_F, player2_M]):
+                if all(x is not None for x in [player1_F, player1_M, player2_F, player2_M]) and self.elo_team_diff_check([player1_F, player1_M, player2_F, player2_M]) :
                     cond = False
                     list_of_players = [player1_F, player1_M, player2_F, player2_M]
 
@@ -182,7 +210,7 @@ class Tournament :
                 except :
                     logging.warning(f"create_random_match : Unable to find a combination to start a {cat} game --> We try again (remaining attempts: {rejection_cpt})")
                     [player1, player2, player3, player4] = [None, None, None, None]
-                if all(x is not None for x in [player1, player2, player3, player4]):
+                if all(x is not None for x in [player1, player2, player3, player4]) and self.elo_team_diff_check([player1, player2, player3, player4]):
                     cond = False
                     list_of_players = [player1, player2, player3, player4]
 
@@ -198,7 +226,7 @@ class Tournament :
                 except :
                     logging.warning(f"create_random_match : Unable to find a combination to start a {cat} game --> We try again (remaining attempts: {rejection_cpt})")
                     [player1, player2, player3, player4] = [None, None, None, None]
-                if all(x is not None for x in [player1, player2, player3, player4]):
+                if all(x is not None for x in [player1, player2, player3, player4]) and self.elo_team_diff_check([player1, player2, player3, player4]):
                     cond = False
                     list_of_players = [player1, player2, player3, player4]
 
@@ -206,13 +234,18 @@ class Tournament :
             while (rejection_cpt>0 and cond):
                 rejection_cpt -= 1
                 try :
-                    [player1, player2, player3, player4] = self.random_sampling(self.players_active, 4)
+                    [player1, player3] = self.random_sampling(self.players_active, 2)
+                    choice_list_of_player2 = [player for player in self.players_active if player not in player1.partners_history and player != player1 and player != player3]
+                    [player2] = self.random_sampling(choice_list_of_player2)
+                    choice_list_of_player4 = [player for player in self.players_active if player not in player3.partners_history and player != player1 and player != player2 and player != player3]
+                    [player4] = self.random_sampling(choice_list_of_player4)
                 except :
                     logging.warning(f"create_random_match : Unable to find a combination to start a {cat} game --> We try again (remaining attempts: {rejection_cpt})")
                     [player1, player2, player3, player4] = [None, None, None, None]
-                if all(x is not None for x in [player1, player2, player3, player4]):
+                if all(x is not None for x in [player1, player2, player3, player4]) and self.elo_team_diff_check([player1, player2, player3, player4]):
                     cond = False
                     list_of_players = [player1, player2, player3, player4]
+
         if list_of_players != []:
             new_match = Match(list_of_players)
             self.number_of_match += 1
