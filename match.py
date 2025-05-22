@@ -31,13 +31,13 @@ class Match:
     
     def determine_match_type(self):
         if self.player1.gender == self.player2.gender == self.player3.gender == self.player4.gender == "M":
-            self.type = "dH"
+            return "dH"
         elif self.player1.gender == self.player2.gender == self.player3.gender == self.player4.gender == "F":
-            self.type = "dF"
+            return "dF"
         elif (self.player1.gender == self.player3.gender) and (self.player2.gender == self.player4.gender) or (self.player1.gender == self.player4.gender) and (self.player2.gender == self.player3.gender) :
-            self.type = "mixte"
+            return "mixte"
         else:
-            self.type = "rand"
+            return "rand"
 
     def set_score(self, score : Score):
         self.score = score

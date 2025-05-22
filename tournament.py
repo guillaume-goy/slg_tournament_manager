@@ -49,22 +49,18 @@ class Tournament :
             else :
                 nb_h += 1
         #dF, dH, mixte, rand
-        TH = (nb_h + nb_f)(nb_h + nb_f -1)
+        TH = (nb_h + nb_f)*(nb_h + nb_f -1)//4
         PL = [0,0,0,0]
         for match in self.played_matches + self.ongoing_matches:
-            PL[0] += match.type == "dF"
-            PL[1] += match.type == "dH"
-            PL[2] += match.type == "mixte"
-            PL[3] += match.type == "rand"
+            PL[0] += (match.type == "dF")
+            PL[1] += (match.type == "dH")
+            PL[2] += (match.type == "mixte")
+            PL[3] += (match.type == "rand")
         return PL, TH
     
     def refresh_winrates(self):
         for player in self.players_global:
             player.update_all()
-
-    def refresh_leaderboard(self):
-        for player in self.players_global:
-            self.leaderboard[player.name] = player.elo
 
     def refresh_elo_std(self):
         elos = []
@@ -73,7 +69,6 @@ class Tournament :
         self.elo_std = ELO_THRESHOLD_COEFF*np.std(elos) + 1
 
     def all_refreshes(self):
-        self.refresh_leaderboard()
         self.refresh_winrates()
         self.update_elo_position()
         self.update_winrate_position()
@@ -239,7 +234,11 @@ class Tournament :
             while (rejection_cpt>0 and cond):
                 rejection_cpt -= 1
                 try :
-                    [player1, player2, player3, player4] = self.random_sampling(self.players_active, 4)
+                    [player1, player3] = self.random_sampling(self.players_active, 2)
+                    choice_list_of_player2 = [player for player in self.players_active if player not in player1.partners_history and player != player1 and player != player3]
+                    [player2] = self.random_sampling(choice_list_of_player2)
+                    choice_list_of_player4 = [player for player in self.players_active if player not in player3.partners_history and player != player1 and player != player2 and player != player3]
+                    [player4] = self.random_sampling(choice_list_of_player4)
                 except :
                     logging.warning(f"create_random_match : Unable to find a combination to start a {cat} game --> We try again (remaining attempts: {rejection_cpt})")
                     [player1, player2, player3, player4] = [None, None, None, None]

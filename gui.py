@@ -304,6 +304,7 @@ tree_leaderboard3.configure(yscrollcommand=scrollbar_leaderboard3.set)
 def update_all():
     update_players_frame()
     update_list_of_matches()
+    refresh_statistics()
 
 def update_players_frame():
     update_leaderboard1()
@@ -413,10 +414,11 @@ tree_list_of_matches.heading("E1", text="Equipe 1")
 tree_list_of_matches.heading("E2", text="Equipe 2")
 tree_list_of_matches.heading("Score", text="Score")
 tree_list_of_matches.heading("Statut", text="Statut", command=lambda: treeview_sort_column(tree_list_of_matches, "Statut", False))
+
 tree_list_of_matches.column("N.", width=40)
 tree_list_of_matches.column("E1", width=200)
 tree_list_of_matches.column("E2", width=200)
-tree_list_of_matches.column("Score", width=120)
+tree_list_of_matches.column("Score", width=140)
 tree_list_of_matches.column("Statut", width=100)
 tree_list_of_matches.grid(row=1, column=0)
 
@@ -502,6 +504,7 @@ def scoring_match():
         global tournament
         tournament.finish_match(actual_match, score)
         update_all()
+        refresh_statistics()
         fenetre.destroy()
 
     fenetre = tk.Toplevel()
@@ -621,12 +624,34 @@ btn6.pack(side="left", padx=5)
 #-------------------------------- STATISTICS FRAME -----------------------------
 
 frame_statistics = tk.Frame(fenetre)
-frame_statistics.grid(row=2, column=0, columnspan=2, pady=10, padx=10)
+frame_statistics.grid(row=3, column=0, columnspan=2, pady=10, padx=10)
 
-#------------------------------- STATISTICS -----------------------------------
+#------------------------------- STATISTICS FUNCTIONS-----------------------------------
 
-PL, TH = tournament.compute_statistics()
-tk.Label(frame_statistics, text=f"Maths joués : {PL[0]} Double Femme, {PL[1]} Double Homme, {PL[2]} Mixtes et {PL[3]} non-renseignés. Total de {np.sum(PL)} matchs joués. (Progression théorique {100*np.sum(PL)/TH:.2f}%)", font=("Arial", 12)).pack(pady=10)
+def refresh_statistics() :
+    global tournament
+    PL, TH = tournament.compute_statistics()
+    if TH != 0:
+        percentage = 100*np.sum(PL)/TH
+    else :
+        percentage = 0.
+    nb_pause = 0
+    nb_match = 0
+    nb_attente_h = 0
+    nb_attente_f = 0
+    nb_joueurs = 0
+    for player in tournament.players_global :
+        nb_pause += player.status == "En pause"
+        nb_match += player.status == "En match"
+        nb_attente_h += (player.status == "En attente" and player.gender == "M")
+        nb_attente_f += (player.status == "En attente" and player.gender == "F")
+        nb_joueurs += 1
+
+    display_stats.config(text=f"Nombre de joueurs : {nb_joueurs} | En match : {nb_match} | En pause : {nb_pause} | En attente {nb_attente_f} F. et {nb_attente_h} H.\nTotal de {np.sum(PL)} matchs joués. (Progression théorique {percentage:.2f}%)")
+
+display_stats = tk.Label(frame_statistics, text=f"Statisques à venir", font=("Arial", 12))
+display_stats.pack(pady=10)
+refresh_statistics()
 
 #------------------------------ FENETRE LOOP -----------------------------------
 
