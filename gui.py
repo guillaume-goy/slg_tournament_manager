@@ -417,7 +417,7 @@ title_list_of_matches.grid(row=0, column=0, columnspan=2, sticky="n", pady=(0, 5
 
 #---------------------- MATCHES ------------------------------------------------
 
-tree_list_of_matches = ttk.Treeview(frame_list_of_matches, columns=("N.", "E1", "E2", "Score", "Statut"), show="headings", height=10)
+tree_list_of_matches = ttk.Treeview(frame_list_of_matches, columns=("N.", "E1", "E2", "Score", "Statut"), show="headings", height=8)
 tree_list_of_matches.heading("N.", text="N.", command=lambda: treeview_sort_column(tree_list_of_matches, "N.", False))
 tree_list_of_matches.heading("E1", text="Equipe 1")
 tree_list_of_matches.heading("E2", text="Equipe 2")
