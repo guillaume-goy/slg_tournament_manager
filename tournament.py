@@ -175,8 +175,8 @@ class Tournament :
     def elo_team_diff_check(self, list_of_players):
         elo_diff = list_of_players[0].elo + list_of_players[1].elo - list_of_players[2].elo - list_of_players[3].elo
         return abs(elo_diff) < self.elo_std
-
-    def create_random_match(self, cat="random"):
+    
+    def select_players(self, cat="random"):
         self.refresh_elo_std()
         list_of_players = []
         rejection_cpt = REJECTION_NUMBER
@@ -245,7 +245,9 @@ class Tournament :
                 if all(x is not None for x in [player1, player2, player3, player4]) and self.elo_team_diff_check([player1, player2, player3, player4]):
                     cond = False
                     list_of_players = [player1, player2, player3, player4]
+        return list_of_players
 
+    def create_match(self, list_of_players, cat="random"):
         if list_of_players != []:
             new_match = Match(list_of_players)
             self.number_of_match += 1

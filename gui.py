@@ -118,16 +118,24 @@ def saving_tounament(event=None):
         messagebox.showerror("Erreur de sauvegarde", "Il n'y a rien à sauvegarder pour le moment.")
 
 def creating_new_match(type):
+    global tournament
     if type not in ["random", "double_H", "double_F", "mixte"]:
         messagebox.showerror("Erreur", "Le type de match selectionné n'est pas conforme")
-    check = tournament.create_random_match(cat=type)
-    if check == 1:
+    list_of_players = tournament.select_players(cat=type)
+    if list_of_players == []:
         messagebox.showerror("Erreur", f"Nous n'avons pas pu créer de match {TYPE_DICO_FR[type]}\nVeuillez vérifier que les conditions sont respectées et reessayer.")
         return
     else :
-        update_all()
-        match = tournament.ongoing_matches[-1]
-        messagebox.showinfo("Match créé", f"!! Match créé avec succès !!\n{match.player1.name} et {match.player2.name} contre {match.player3.name} et {match.player4.name}")
+        answer = messagebox.askyesno("Proposition Composition", f"Composition proposée :\n{list_of_players[0].name} et {list_of_players[1].name} contre {list_of_players[2].name} et {list_of_players[3].name}\nAccesptez-vous ce match ?")
+        if answer :
+            tournament.create_match(list_of_players, cat=type)
+            update_all()
+            match = tournament.ongoing_matches[-1]
+            #messagebox.showinfo("Confirmation création du match", "Match créé", f"!! Match créé avec succès !!\n{match.player1.name} et {match.player2.name} contre {match.player3.name} et {match.player4.name}")
+            logging.info(f"!! Match créé avec succès !!\n{match.player1.name} et {match.player2.name} contre {match.player3.name} et {match.player4.name}")
+        else :
+            #messagebox.showinfo("Annulation du match", "Match annulé avec succès.\n")
+            logging.info(f"Annulation après proposition de match : {list_of_players[0].name} et {list_of_players[1].name} contre {list_of_players[2].name} et {list_of_players[3].name}")
 
 def infos():
     nb_total_points = 0
@@ -305,6 +313,7 @@ def update_all():
     update_players_frame()
     update_list_of_matches()
     refresh_statistics()
+    saving_tounament()
 
 def update_players_frame():
     update_leaderboard1()
